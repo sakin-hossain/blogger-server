@@ -27,11 +27,7 @@ async function run(){
 
         app.get('/users', async(req,res)=>{
             const users = await usersCollection.find({}).toArray()
-            const count = await cursor.count();
-            res.json({
-                count,
-                users
-            });
+            res.json(users);
         })
 
         app.post('/users', async(req,res)=>{
@@ -64,12 +60,16 @@ async function run(){
         })
 
         app.get('/posts', async(req,res)=>{
-            const posts = await postsCollection.find({}).toArray();
-            const count = await cursor.count();
-            res.json({
-                count,
-                posts
-            });
+            const cursor = await postsCollection.find({});
+            const size = req.query.size;
+            let posts;
+            if(size){
+                posts = await cursor.limit(size).toArray();
+            }
+            else{
+                posts = await cursor.toArray();
+            }
+            res.json(posts);
         })
 
         app.get('/posts/:email', async(req,res)=>{
