@@ -84,15 +84,11 @@ async function run(){
             const post = await postsCollection.findOne(query);
             res.send(post);
         })
-        // app.post('/comments', async(req,res)=>{
-        //     const comment = req.body;
-        //     const result = await commentCollection.insertOne(comment);
-        //     res.json(result);
-        // })
-        // app.get('/comments', async(req,res)=>{
-        //     const comments = await commentCollection.find({}).toArray();
-        //     res.json(comments);
-        // })
+        app.delete('/post/:id', async(req,res)=>{
+            const query = { _id: ObjectId(req.params.id)};
+            const result = await postsCollection.deleteOne(query);
+            res.json(result);
+        })
     }
     finally {
         // await client.close();
