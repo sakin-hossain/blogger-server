@@ -89,6 +89,14 @@ async function run(){
             const result = await postsCollection.deleteOne(query);
             res.json(result);
         })
+        app.put('/post/:id', async(req,res)=>{
+            const post = req.body;
+            const filter = { _id: ObjectId(req.params.id)};
+            const options = { upsert: true };
+            const updated = {$set:post}
+            const result = await usersCollection.updateOne(filter, updated, options);
+            res.json(result);
+        })
     }
     finally {
         // await client.close();
