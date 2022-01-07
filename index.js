@@ -93,7 +93,11 @@ async function run(){
             const post = req.body;
             const filter = { _id: ObjectId(req.params.id)};
             const options = { upsert: true };
-            const updated = {$set:post}
+            const updated = {
+                $set:{
+                    post: post
+                }
+            }
             const result = await usersCollection.updateOne(filter, updated, options);
             res.json(result);
         })
