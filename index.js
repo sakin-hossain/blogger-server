@@ -3,15 +3,16 @@ const app = express()
 const port = process.env.port || 5000
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient } = require('mongodb');
+const { MongoClient, Db } = require('mongodb');
 const fileUpload = require('express-fileupload');
+const ObjectId = require('mongodb').ObjectId;
+const { ObjectID } = require('bson');
 
 app.use(cors())
 app.use(express.json())
 app.use(fileUpload())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tqbro.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-console.log(uri);
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -22,10 +23,15 @@ async function run(){
         const database = client.db('blogger');
         const usersCollection = database.collection('users');
         const postsCollection = database.collection('posts');
+        const commentCollection = database.collection('comment');
 
         app.get('/users', async(req,res)=>{
-            const result = await usersCollection.find({}).toArray()
-            res.json(result);
+            const users = await usersCollection.find({}).toArray()
+            const count = await cursor.count();
+            res.json({
+                count,
+                users
+            });
         })
 
         app.post('/users', async(req,res)=>{
@@ -44,6 +50,13 @@ async function run(){
             res.json(result);
         })
 
+        app.get('/users/:email', async(req,res)=>{
+            const userEmail = req.params.email;
+            const filter = {email : userEmail};
+            const result = await usersCollection.findOne(filter);
+            res.send(result);
+        })
+
         app.post('/posts', async(req,res)=>{
             const post = req.body;
             const result = await postsCollection.insertOne(post);
@@ -52,8 +65,34 @@ async function run(){
 
         app.get('/posts', async(req,res)=>{
             const posts = await postsCollection.find({}).toArray();
-            res.json(posts);
+            const count = await cursor.count();
+            res.json({
+                count,
+                posts
+            });
         })
+
+        app.get('/posts/:email', async(req,res)=>{
+            const postEmail = req.params.email;
+            const filter = {email: postEmail};
+            const result = await postsCollection.find(filter).toArray();
+            res.json(result);
+        })
+
+        app.get('/post/:id',async(req,res)=>{
+            const query = { _id: ObjectId(req.params.id)}
+            const post = await postsCollection.findOne(query);
+            res.send(post);
+        })
+        // app.post('/comments', async(req,res)=>{
+        //     const comment = req.body;
+        //     const result = await commentCollection.insertOne(comment);
+        //     res.json(result);
+        // })
+        // app.get('/comments', async(req,res)=>{
+        //     const comments = await commentCollection.find({}).toArray();
+        //     res.json(comments);
+        // })
     }
     finally {
         // await client.close();
