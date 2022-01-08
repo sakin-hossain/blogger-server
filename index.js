@@ -13,6 +13,7 @@ app.use(express.json())
 app.use(fileUpload())
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.tqbro.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+console.log(uri);
 
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
@@ -26,8 +27,18 @@ async function run(){
         const commentCollection = database.collection('comment');
 
         app.get('/users', async(req,res)=>{
-            const users = await usersCollection.find({}).toArray()
-            res.json(users);
+            const page = req.query.page;
+            const size = parseInt(req.query.size);
+            const cursor = await usersCollection.find({});
+            let result;
+            const count = await cursor.count();
+            if(page){
+                result = await cursor.skip(page*size).limit(size).toArray();
+            }
+            else{
+                result = await cursor.toArray();
+            }
+            res.json({count,result});
         })
 
         app.post('/users', async(req,res)=>{
@@ -61,14 +72,8 @@ async function run(){
 
         app.get('/posts', async(req,res)=>{
             const cursor = await postsCollection.find({});
-            const size = req.query.size;
-            let posts;
-            if(size){
-                posts = await cursor.limit(size).toArray();
-            }
-            else{
-                posts = await cursor.toArray();
-            }
+            const size = parseInt(req.query.size);
+            const posts = await cursor.limit(size).toArray();
             res.json(posts);
         })
 
@@ -90,16 +95,16 @@ async function run(){
             res.json(result);
         })
         app.put('/post/:id', async(req,res)=>{
-            const post = req.body;
-            const filter = { _id: ObjectId(req.params.id)};
-            const options = { upsert: true };
-            const updated = {
-                $set:{
-                    post: post
+            const comments = req.body
+            const id = req.params.id
+            const filter = { _id: ObjectId(id)};
+            const comment = {
+                $push: {
+                    comments : comments
                 }
             }
-            const result = await usersCollection.updateOne(filter, updated, options);
-            res.json(result);
+            const result = postsCollection.findOneAndUpdate(filter, comment);
+            res.json(result)
         })
     }
     finally {
