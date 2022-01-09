@@ -106,6 +106,20 @@ async function run(){
             const result = postsCollection.findOneAndUpdate(filter, comment);
             res.json(result)
         })
+        app.put('/posts', async(req,res)=>{
+            const id = req.body.id;
+            const post = req.body.post;
+            const title = req.body.title;
+            const filter = { _id: ObjectId(id)};
+            const update = {
+                $set : {
+                    title: title,
+                    post: post
+                }
+            }
+            const result = postsCollection.updateOne(filter, update);
+            res.json(result);
+        })
     }
     finally {
         // await client.close();
